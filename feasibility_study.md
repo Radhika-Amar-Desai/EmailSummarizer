@@ -42,6 +42,29 @@ Preprocessing the data by removing very similar emails using the cosine similarr
 
 We need to setup our backend server as well as the entire AI model on user's servers. Changing the backend server will most likely involve changing the API endpoint. How do we do this without redeplying the entire website ? (that is cause the frontend to use a different API point dynamically ) The user must not be able to access the source code of our backend or AI model.
 
+### Proposed Strategy for Portable Backend
+
+1. **Dynamic API Endpoint Management:**
+
+Use a config.json file or environment variables to dynamically fetch the API endpoint in the frontend.
+
+2. **Containerized Deployment:**
+
+Package the backend and AI model into a Docker container.
+
+3. **Code and Model Security:**
+
+Encrypt AI model files and decrypt them at runtime inside the container.
+
+4. **Seamless Updates:**
+
+Host Docker images on a centralized registry.
+
+5. **User Documentation:**
+
+Provide a clear guide with setup steps and API key management.
+
+
 ## How to get access to user's emails ?
 
 ### Challenges
