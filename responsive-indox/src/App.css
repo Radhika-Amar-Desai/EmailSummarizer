@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+main {
+  max-width: 1200px;
+  margin: auto;
+}
+
+@media (max-width: 768px) {
+  main > div {
+    flex-direction: column;
+  }
+}
+
+/* Add to your CSS file */
+.sticky-note {
+  background-color: #fef3c7; /* Light yellow for sticky note */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Drop shadow for depth */
+  border-radius: 10px; /* Rounded corners */
+  padding: 15px; /* Inner padding for text */
+  margin: 10px 0; /* Spacing between notes */
+  text-align: center; /* Center align text */
+  font-family: "Comic Sans MS", cursive, sans-serif; /* Playful font */
+  font-size: 1rem; /* Adjust text size */
+  color: #333; /* Text color */
+  width: 90%; /* Adjust width for responsiveness */
+  cursor: pointer; /* Pointer cursor for interactivity */
+  transform: rotate(-2deg); /* Slight rotation for sticky note effect */
+  transition: transform 0.2s ease; /* Smooth hover effect */
+}
+
+.sticky-note:hover {
+  transform: rotate(0deg) scale(1.05); /* Hover interaction */
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3); /* Enhance shadow on hover */
+}
+
