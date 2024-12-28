@@ -67,7 +67,9 @@ def read_emails():
 
     # Parse the date from the POST request
     try:
+        # data = request.json
         target_date = "2024-12-28"
+
         if not target_date:
             return jsonify({'error': 'Date is required in the request body'}), 400
 
