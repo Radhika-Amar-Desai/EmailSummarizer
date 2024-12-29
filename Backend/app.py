@@ -5,6 +5,8 @@ from googleapiclient.discovery import build
 from pymongo import MongoClient
 import os
 import datetime
+import summarize
+import classify
 
 
 app = Flask(__name__)
@@ -18,6 +20,9 @@ CLIENT_SECRETS_FILE = os.environ['TEMP']  # Path to your client secret file
 mongo_client = MongoClient("mongodb://localhost:27017/")
 email_db = mongo_client["email_database"]  # Database name
 emails_collection = email_db["emails"]  # Collection name
+categorized_summaries_collection = email_db["categorized_summaries"]
+
+
 
 @app.route('/authorize')
 def authorize():
@@ -129,12 +134,40 @@ def read_emails():
         return jsonify({'error': str(e)})
 
 
-
 @app.route('/logout')
 def logout():
     """Logs the user out by clearing the session."""
     session.clear()
     return redirect(url_for('authorize'))
+
+
+@app.route('/get_classified_summary')
+def get_classified_summary():
+    """
+    Retrieves email summaries, classifies them based on user-defined categories,
+    and returns a JSON object with classified summaries.
+    """
+    try:
+        
+        emails = list(emails_collection.find({}, {"_id": 0}))  # Exclude the MongoDB `_id` field
+        if not emails:
+            return jsonify({'error': 'No emails found in the database'}), 404
+        
+        summaries = summarize.generate_summary(emails)
+        categories = ["VIT related", "others"]
+        categorized_summaries = classify.classify_emails(summaries, categories)
+        
+        # categorized_summary_docs = [
+        #     {"content": summary["content"], "category": summary["label"]}
+        #     for summary in categorized_summaries
+        # ]
+        
+        # categorized_summaries_collection.insert_many(categorized_summary_docs)
+        
+        return jsonify({'classified_summaries': categorized_summaries})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
