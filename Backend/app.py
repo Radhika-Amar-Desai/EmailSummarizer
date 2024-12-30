@@ -64,27 +64,21 @@ def callback():
     return redirect(url_for('read_emails'))
 
 
-@app.route('/read_emails')
-def read_emails():
-    """Reads emails from the main inbox received on a specific date provided in the POST request."""
+@app.route('/logout')
+def logout():
+    """Logs the user out by clearing the session."""
+    session.clear()
+    return redirect(url_for('authorize'))
+
+
+def fetch_emails(target_date=None):
+    """
+    Core logic for retrieving emails from Gmail.
+    Automatically initiates OAuth flow if the user is not authenticated.
+    """
     if 'credentials' not in session:
-        return redirect(url_for('authorize'))
-
-    # Parse the date from the POST request
-    try:
-        # data = request.json
-        target_date = "2024-12-28"
-
-        if not target_date:
-            return jsonify({'error': 'Date is required in the request body'}), 400
-
-        # Validate the date format
-        try:
-            target_date = datetime.datetime.strptime(target_date, '%Y-%m-%d').date()
-        except ValueError:
-            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        # Redirect to the authorization route to authenticate the user
+        raise ValueError("User is not authenticated")
 
     credentials_dict = session['credentials']
     credentials = Credentials(
@@ -96,78 +90,90 @@ def read_emails():
         scopes=credentials_dict['scopes']
     )
 
+    # Check if token has expired and refresh if possible
+    if credentials.expired and credentials.refresh_token:
+        try:
+            credentials.refresh(Request())
+            # Save the refreshed credentials back to the session
+            session['credentials'] = {
+                'token': credentials.token,
+                'refresh_token': credentials.refresh_token,
+                'token_uri': credentials.token_uri,
+                'client_id': credentials.client_id,
+                'client_secret': credentials.client_secret,
+                'scopes': credentials.scopes
+            }
+        except Exception as e:
+            raise ValueError(f"Token refresh failed: {e}")
+
     service = build('gmail', 'v1', credentials=credentials)
 
+    if not target_date:
+        target_date = datetime.datetime.now().date()
+
+    query = f"label:INBOX after:{target_date} before:{target_date + datetime.timedelta(days=1)}"
+    results = service.users().messages().list(userId='me', q=query).execute()
+    messages = results.get('messages', [])
+
+    email_data = []
+    for message in messages:
+        msg = service.users().messages().get(userId='me', id=message['id']).execute()
+        headers = msg['payload'].get('headers', [])
+
+        email_info = {
+            'id': message['id'],
+            'snippet': msg.get('snippet', '')
+        }
+
+        for header in headers:
+            if header['name'] == 'From':
+                email_info['from'] = header['value']
+            elif header['name'] == 'Date':
+                email_info['time'] = header['value']
+
+        email_data.append(email_info)
+
+    return email_data
+
+
+@app.route('/read_emails', methods=['POST'])
+def read_emails():
     try:
-        # Fetch messages from the main inbox on the specified date
-        query = f"label:INBOX after:{target_date} before:{target_date + datetime.timedelta(days=1)}"
-        results = service.users().messages().list(userId='me', q=query).execute()
-        messages = results.get('messages', [])
-
-        email_data = []
-        for message in messages:
-            msg = service.users().messages().get(userId='me', id=message['id']).execute()
-            headers = msg['payload'].get('headers', [])
-
-            email_info = {
-                'id': message['id'],
-                'snippet': msg.get('snippet', '')
-            }
-
-            for header in headers:
-                if header['name'] == 'From':
-                    email_info['from'] = header['value']
-                elif header['name'] == 'Date':
-                    email_info['time'] = header['value']
-
-            # Save email to MongoDB
-            emails_collection.insert_one(email_info)
-
-            # Remove the `_id` field (it will be added automatically by MongoDB)
-            if '_id' in email_info:
-                del email_info['_id']
-
-            email_data.append(email_info)
-
-        return jsonify(email_data)
+        target_date = request.json  # Example date logic
+        emails = fetch_emails(target_date=target_date)
+        return jsonify(emails)
+    except ValueError as e:
+        if "User is not authenticated" in str(e):
+            # Redirect to the authorize route if not authenticated
+            return redirect(url_for('authorize'))
+        return jsonify({'error': str(e)}), 500
     except Exception as e:
-        return jsonify({'error': str(e)})
+        return jsonify({'error': str(e)}), 500
 
 
-@app.route('/logout')
-def logout():
-    """Logs the user out by clearing the session."""
-    session.clear()
-    return redirect(url_for('authorize'))
-
-
-@app.route('/get_classified_summary')
+@app.route('/get_classified_summary', methods=['POST'])
 def get_classified_summary():
-    """
-    Retrieves email summaries, classifies them based on user-defined categories,
-    and returns a JSON object with classified summaries.
-    """
     try:
-        
-        emails = list(emails_collection.find({}, {"_id": 0}))  # Exclude the MongoDB `_id` field
-        if not emails:
-            return jsonify({'error': 'No emails found in the database'}), 404
-        
+        target_date = request.json
+        emails = fetch_emails(target_date=target_date)  # Reuse the same logic
+
         summaries = summarize.generate_summary(emails)
-        categories = ["VIT related", "others"]
+        
+        categories = request.json    
         categorized_summaries = classify.classify_emails(summaries, categories)
         
-        # categorized_summary_docs = [
-        #     {"content": summary["content"], "category": summary["label"]}
-        #     for summary in categorized_summaries
-        # ]
-        
-        # categorized_summaries_collection.insert_many(categorized_summary_docs)
-        
         return jsonify({'classified_summaries': categorized_summaries})
+    
+    except ValueError as e:
+        
+        if "User is not authenticated" in str(e):
+            return redirect(url_for('authorize'))
+        
+        return jsonify({'error': str(e)}), 500
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 if __name__ == '__main__':
