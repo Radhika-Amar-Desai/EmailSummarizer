@@ -170,9 +170,10 @@ def get_classified_summary():
             return redirect(url_for('authorize'))
         
         return jsonify({'error': str(e)}), 500
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 
