@@ -1,34 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
+import { LuSmilePlus } from "react-icons/lu";
 import NavBar from "./components/NavBar";
 import CategoryColumn from "./components/CategoryColumn";
+import DefineCustomCategory from "./components/DefineCustomCategory";
 
 const App = () => {
-  const categories = [
+  const [categories, setCategories] = useState([
     {
       title: "Category-one",
-      color: "#e0bbff", // Background color for the category column
-      cards: Array(5).fill({ text: "wertrcyvu byi", color: "#b983ff" }), // Cards in the category
+      color: "#F5EFFF",
+      titleBoxColor: "#E0C3FC",
+      cards: Array(5).fill({ text: "wertrcyvu byi", color: "#D7B8F8" }),
     },
     {
       title: "Category-two",
-      color: "#bbffd0",
-      cards: Array(4).fill({ text: "wertrcyvu byi", color: "#83ffa4" }),
+      color: "#F3FBEA",
+      titleBoxColor: "#B7E5D3",
+      cards: Array(4).fill({ text: "wertrcyvu byi", color: "#6FDB83" }),
     },
     {
       title: "Category-three",
-      color: "#bbf0ff",
-      cards: Array(5).fill({ text: "wertrcyvu byi", color: "#83d5ff" }),
+      color: "#E3F5FA",
+      titleBoxColor: "#A4D9EC",
+      cards: Array(5).fill({ text: "wertrcyvu byi", color: "#7BD3EA" }),
     },
-  ];
+  ]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const addCategory = (titles) => {
+    const newCategories = titles.map((title) => ({
+      title,
+      color: "#FFF6E5",
+      titleBoxColor: "#FFD27D",
+      cards: [],
+    }));
+    setCategories((prev) => [...prev, ...newCategories]);
+  };
 
   return (
     <div>
-      {/* Navigation Bar */}
       <NavBar />
-
-      {/* Main Content */}
       <main style={{ padding: "20px" }}>
-        {/* Heading and Date */}
         <div
           style={{
             display: "flex",
@@ -37,14 +50,25 @@ const App = () => {
             marginBottom: "20px",
           }}
         >
-          <h1 style={{ fontFamily: "cursive", margin: 0 }}>
+          <h1
+            style={{
+              fontFamily: "cursive",
+              margin: 0,
+              fontSize: "32px",
+              marginLeft: "162px",
+              marginTop: "64px",
+              fontWeight: 400,
+            }}
+          >
             Your Inbox At A Glance
           </h1>
           <p
             style={{
               fontFamily: "Arial, sans-serif",
-              fontSize: "18px",
+              fontSize: "15px",
               margin: 0,
+              marginTop: "67px",
+              marginLeft: "690px",
             }}
           >
             📅 {new Date().toLocaleDateString("en-GB", {
@@ -55,14 +79,30 @@ const App = () => {
           </p>
         </div>
 
-        {/* Category Columns */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            marginBottom: "30px",
+            fontFamily: "cursive",
+            fontSize: "20px",
+            color: "#5A5A5A",
+            cursor: "pointer",
+          }}
+          onClick={() => setIsModalOpen(true)}
+        >
+          <LuSmilePlus style={{ marginRight: "8px" }} />
+          Define Custom Categories
+        </div>
+
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "space-around",
             gap: "20px",
-            marginTop: "100px",
+            marginTop: "50px",
           }}
         >
           {categories.map((category, index) => (
@@ -71,9 +111,17 @@ const App = () => {
               title={category.title}
               cards={category.cards}
               bgColor={category.color}
+              titleBoxColor={category.titleBoxColor}
             />
           ))}
         </div>
+
+        {isModalOpen && (
+          <DefineCustomCategory
+            onAddCategory={addCategory}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
       </main>
     </div>
   );

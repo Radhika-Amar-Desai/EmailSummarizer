@@ -4,13 +4,13 @@ const NavBar = () => {
   return (
     <div
       style={{
-        backgroundColor: "#e5e5e5",
+        backgroundColor: "#D9D9D9",
         padding: "20px",
-        fontFamily: "Caveat, cursive",
-        fontSize: "18px",
-        fontWeight: "bold",
+        fontFamily: "Figma Hand,Cursive",
+        fontSize: "15px",
+        fontWeight: 400,
         textAlign: "center",
-        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+        marginHeight: "51px",
       }}
     >
       Nav Bar Goes Here
