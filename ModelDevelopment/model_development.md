@@ -13,21 +13,24 @@ The dataset used for this experiment is available at:
 
 The BART-large model from Hugging Face's Transformers library was selected for fine-tuning. The Transformers library was utilized exclusively for pipeline development.
 
-### Cloud Services
+### Ongoing Approach
 
-AWS SageMaker Studio was employed for this experiment, leveraging its Jupyter Space and Training Jobs features.
+AWS SageMaker Studio is being employed for this experiment, leveraging its Jupyter Space and Training Jobs features. 
 
 -   **AWS SageMaker Jupyter Space**: This feature provides an interactive environment to write and execute Python code. It allows users to develop and test scripts in a managed Jupyter Notebook environment without the need to set up or manage computing instances manually.
 -   **Training Jobs**: AWS SageMaker Training Jobs enable programmatic execution of training tasks on specified hardware configurations, handling instance provisioning and management automatically.
 
-In this experiment, the team used the Jupyter Space to write and execute code that programmatically set up a SageMaker Training Job. This approach facilitated efficient training of the model without concerns about instance management.
+#### Challenges
 
-Details of the services used are as follows:
+- Out-of-memory error: Due to large dataset and large model size, the fine tuning process is memory intensive resulting in out of memory error. 
 
--   **Training Job**: `arn:aws:sagemaker:us-east-1:767398072245:training-job/pytorch-training-2024-12-27-14-32-37-754`
--   **SageMaker Domain**: `d-ht7zbmtb77d9`
--   **SageMaker User Profile**: `arn:aws:iam::767398072245:role/service-role/AmazonSageMaker-ExecutionRole-20241224T012277`
--   **SageMaker Studio**: `studio-d-ht7zbmtb77d9.studio.us-east-1.sagemaker.aws`
+#### Stratagies
+
+1. Out-of-memory error
+
+- The team is experimenting with a variety of memory optimized approaches : clearing cache after every batch, using mini batch of size one as well as mixed precision training.
+
+- The team plans to explore data parallelism as well as model parallelism in upcoming sprints.
 
 ### Failed Approaches
 
